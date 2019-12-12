@@ -25,34 +25,53 @@ program
 
 program.parse(process.argv);
 
-function inquire() {
-  // questions array
-  const questions = [
-    {
-      type: "input",
-      name: "db",
-      message: "database do you want to use (mongo,postgres):"
-    },
-    {
-      type: "input",
-      name: "additional_packages",
-      message: "additional packages you want to install (space separated):"
-    }
-  ];
-  inquirer.prompt(questions).then(answers => {
-    config = answers;
+// check if project directory exists
+const exists = fs.existsSync(projectName);
+if (exists) {
+  log(chalk.red(`directory with name '${projectName}' already exists...`));
+  process.exit(-1);
+}
+const questions = [
+  {
+    type: "input",
+    name: "packages",
+    message: "additional packages you want to install (space separated):"
+  }
+];
+inquirer.prompt(questions).then(answers => {
+  config = answers;
+  createProjectDirectory();
+  resolveAndInstallPackages(config);
+});
+
+function createProjectDirectory() {
+  log("creating new express project in", chalk.green(root));
+  fs.mkdirSync(projectName);
+  const packageJson = {
+    name: projectName,
+    version: "0.1.0",
+    private: true
+  };
+  fs.writeFileSync(
+    path.join(root, "package.json"),
+    JSON.stringify(packageJson)
+  );
+}
+
+function runPackageInstaller(packages) {
+  process.chdir(root);
+  const command = "npm";
+  const args = ["install", "--save", "--loglevel", "error"].concat(packages);
+  spawn.sync(command, args, {
+    stdio: "inherit"
   });
 }
 
-function createProjectDirectory() {
-  const exists = fs.existsSync(projectName);
-  if (exists) {
-    log(chalk.red(`directory with name '${projectName}' already exists...`));
-    process.exit(-1);
-  }
-  log("creating new express project in", chalk.green(root));
-  fs.mkdirSync(projectName);
+function resolveAndInstallPackages({ packages }) {
+  packages = packages
+    .trim()
+    .split(" ")
+    .concat(["express"]);
+  log(packages);
+  runPackageInstaller(packages);
 }
-
-// inquire();
-createProjectDirectory();
