@@ -11,10 +11,10 @@ let config;
 let root;
 
 program
-  .command("new <name>")
-  .description("create a new express project")
-  .action(name => {
-    const { errors } = validate(name);
+.command("new <name>")
+.description("create a new express project")
+.action(name => {
+	const { errors } = validate(name);
     if (errors) {
       log(chalk.red("invalid project name..."));
       process.exit(-1);
